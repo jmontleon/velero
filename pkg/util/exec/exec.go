@@ -18,41 +18,37 @@ package exec
 
 import (
 	"bytes"
-	"io"
-	"os"
+	"io/ioutil"
 	"os/exec"
-	"sync"
+
+	"github.com/pkg/errors"
 )
 
 // RunCommand runs a command and returns its stdout, stderr, and its returned
 // error (if any). If there are errors reading stdout or stderr, their return
 // value(s) will contain the error as a string.
 func RunCommand(cmd *exec.Cmd) (string, string, error) {
+	stdoutBuf := new(bytes.Buffer)
+	stderrBuf := new(bytes.Buffer)
 
-	var stdoutBuf, stderrBuf bytes.Buffer
-	stdoutIn, _ := cmd.StdoutPipe()
-	stderrIn, _ := cmd.StderrPipe()
+	cmd.Stdout = stdoutBuf
+	cmd.Stderr = stderrBuf
 
-	var errStdout error
-	stdout := io.MultiWriter(os.Stdout, &stdoutBuf)
-	stderr := io.MultiWriter(os.Stderr, &stderrBuf)
+	runErr := cmd.Run()
 
-	err := cmd.Start()
+	var stdout, stderr string
 
-	var wg sync.WaitGroup
-	wg.Add(1)
+	if res, readErr := ioutil.ReadAll(stdoutBuf); readErr != nil {
+		stdout = errors.Wrap(readErr, "error reading command's stdout").Error()
+	} else {
+		stdout = string(res)
+	}
 
-	go func() {
-		_, errStdout = io.Copy(stdout, stdoutIn)
-		wg.Done()
-	}()
+	if res, readErr := ioutil.ReadAll(stderrBuf); readErr != nil {
+		stderr = errors.Wrap(readErr, "error reading command's stderr").Error()
+	} else {
+		stderr = string(res)
+	}
 
-	_, _ = io.Copy(stderr, stderrIn)
-	wg.Wait()
-
-	err = cmd.Wait()
-
-	outStr, errStr := string(stdoutBuf.Bytes()), string(stderrBuf.Bytes())
-
-	return outStr, errStr, err
+	return stdout, stderr, runErr
 }
