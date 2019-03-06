@@ -37,7 +37,6 @@ import (
 	informers "github.com/heptio/ark/pkg/generated/informers/externalversions/ark/v1"
 	listers "github.com/heptio/ark/pkg/generated/listers/ark/v1"
 	"github.com/heptio/ark/pkg/restic"
-	arkexec "github.com/heptio/ark/pkg/util/exec"
 	"github.com/heptio/ark/pkg/util/filesystem"
 	"github.com/heptio/ark/pkg/util/kube"
 )
@@ -228,7 +227,7 @@ func (c *podVolumeBackupController) processBackup(req *arkv1api.PodVolumeBackup)
 
 	var stdout, stderr string
 
-	if stdout, stderr, err = arkexec.RunCommand(resticCmd.Cmd()); err != nil {
+	if stdout, stderr, err = c.RunBackupCommand(resticCmd.Cmd(), req); err != nil {
 		log.WithError(errors.WithStack(err)).Errorf("Error running command=%s, stdout=%s, stderr=%s", resticCmd.String(), stdout, stderr)
 		return c.fail(req, fmt.Sprintf("error running restic backup, stderr=%s: %s", stderr, err.Error()), log)
 	}
@@ -243,6 +242,7 @@ func (c *podVolumeBackupController) processBackup(req *arkv1api.PodVolumeBackup)
 	// update status to Completed with path & snapshot id
 	req, err = c.patchPodVolumeBackup(req, func(r *arkv1api.PodVolumeBackup) {
 		r.Status.Path = path
+		r.Status.Progress = "100%"
 		r.Status.SnapshotID = snapshotID
 		r.Status.Phase = arkv1api.PodVolumeBackupPhaseCompleted
 	})

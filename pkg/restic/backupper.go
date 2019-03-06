@@ -222,6 +222,9 @@ func newPodVolumeBackup(backup *arkv1api.Backup, pod *corev1api.Pod, volumeName,
 			BackupStorageLocation: backup.Spec.StorageLocation,
 			RepoIdentifier:        repoIdentifier,
 		},
+		Status: arkv1api.PodVolumeBackupStatus{
+			Progress: "0%",
+		},
 	}
 }
 
