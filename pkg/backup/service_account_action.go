@@ -19,9 +19,9 @@ package backup
 import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	rbac "k8s.io/api/rbac/v1"
+	//rbac "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	//metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
 
@@ -40,26 +40,27 @@ type ServiceAccountAction struct {
 // NewServiceAccountAction creates a new ItemAction for service accounts.
 func NewServiceAccountAction(logger logrus.FieldLogger, clusterRoleBindingListers map[string]ClusterRoleBindingLister, discoveryHelper velerodiscovery.Helper) (*ServiceAccountAction, error) {
 	// Look up the supported RBAC version
-	var supportedAPI metav1.GroupVersionForDiscovery
-	for _, ag := range discoveryHelper.APIGroups() {
-		if ag.Name == rbac.GroupName {
-			supportedAPI = ag.PreferredVersion
-			break
-		}
-	}
+	//var supportedAPI metav1.GroupVersionForDiscovery
+	//for _, ag := range discoveryHelper.APIGroups() {
+	//	if ag.Name == rbac.GroupName {
+	//		supportedAPI = ag.PreferredVersion
+	//		break
+	//	}
+	//}
 
-	crbLister := clusterRoleBindingListers[supportedAPI.Version]
+	//crbLister := clusterRoleBindingListers[supportedAPI.Version]
 
 	// This should be safe because the List call will return a 0-item slice
 	// if there's no matching API version.
-	crbs, err := crbLister.List()
-	if err != nil {
-		return nil, err
-	}
+	//crbs, err := crbLister.List()
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	return &ServiceAccountAction{
-		log:                 logger,
-		clusterRoleBindings: crbs,
+		log: logger,
+		//clusterRoleBindings: crbs,
+		clusterRoleBindings: nil,
 	}, nil
 }
 
